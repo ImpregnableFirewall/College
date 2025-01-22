@@ -43,15 +43,15 @@ class Book {
 }
 
 
-public class q10 {
+public class Main {
 
 
    public static void main(String[] args) {
        Scanner sc = new Scanner(System.in);
        Book[] inventory = {
-               new Book("The Mountain is You", "David Goggins", "Bloomsbury", 500, 5),
-               new Book("The Alchemist", "Paulo Coelho", "HarperCollins", 300, 10),
-               new Book("Zero to One", "J.R.R. Tolkien", "Allen & Unwin", 400, 8),
+               new Book("Gangtoker Gondogol", "Satyajit Ray", "Ananda Publishers", 500, 5),
+               new Book("Man Eaters of Kumaon", "Jim Corbett", "HarperCollins", 300, 10),
+               new Book("Sapiens", "Yuval Noah Harari", "Penguin Books", 400, 8),
                new Book("Atomic Habits", "James Clear", "Secker & Warburg", 350, 6)
        };
        boolean found = false;
@@ -64,18 +64,14 @@ public class q10 {
        author = sc.nextLine();
 
 
-       for (Book book : inventory) {
-           if (book.matches(title, author)) {
+       for (Book b : inventory) {
+           if (b.matches(title, author)) {
                found = true;
                System.out.println("Book is available. Details:");
-               book.displayDetails();
-
-
+               b.displayDetails();
                System.out.print("Enter the number of copies required: ");
                int requestedCopies = sc.nextInt();
-
-
-               book.processPurchase(requestedCopies);
+               b.processPurchase(requestedCopies);
                break;
            }
        }
