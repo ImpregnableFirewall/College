@@ -12,16 +12,16 @@ class Tomato implements Fruit,Vegetable
 {
 	public void hasAPeel()
 	{
-		System.out.println("Has a peel!");
+		System.out.println("Tomato has a peel");
 	}
 	
 	public void hasARoot()
 	{
-		System.out.println("Has a root!");
+		System.out.println("Tomato has a root!");
 	}
 }
 
-class Plant
+class Main
 {
 	public static void main(String args[])
 	{
