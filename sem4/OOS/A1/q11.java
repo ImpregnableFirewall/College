@@ -74,14 +74,44 @@ class Date {
 
 public class Main {
     public static void main(String[] args) {
-        Date date = new Date();
-        date.printDate();
-        date.getPreviousDay();
+        Date d1 = new Date();
+        d1.printDate();
+        d1.getPreviousDay();
         System.out.print("Previous day: ");
-        date.printDate();
-        date.getNextDay();
-        date.getNextDay();
+        d1.printDate();
+        d1.getNextDay();
+        d1.getNextDay();
         System.out.print("Next day: ");
-        date.printDate();
+        d1.printDate();
+        
+        Date d2 = new Date(29);
+        d2.printDate();
+        d2.getPreviousDay();
+        System.out.print("Previous day: ");
+        d2.printDate();
+        d2.getNextDay();
+        d2.getNextDay();
+        System.out.print("Next day: ");
+        d2.printDate();
+        
+        Date d3 = new Date(12,5);
+        d3.printDate();
+        d3.getPreviousDay();
+        System.out.print("Previous day: ");
+        d3.printDate();
+        d3.getNextDay();
+        d3.getNextDay();
+        System.out.print("Next day: ");
+        d3.printDate();
+        
+        Date d4 = new Date(12,5,2004);
+        d4.printDate();
+        d4.getPreviousDay();
+        System.out.print("Previous day: ");
+        d4.printDate();
+        d4.getNextDay();
+        d4.getNextDay();
+        System.out.print("Next day: ");
+        d4.printDate();
     }
 }
