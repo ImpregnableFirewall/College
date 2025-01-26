@@ -37,7 +37,7 @@ class Book {
            System.out.println("Total Cost: " + (cost * requestedCopies));
            stock -= requestedCopies;
        } else {
-           System.out.println("Required copies not in stock");
+           System.out.println("Not in stock");
        }
    }
 }
