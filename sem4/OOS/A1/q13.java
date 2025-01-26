@@ -1,147 +1,81 @@
-import java.util.*;
-class Person
-{
-	int age;
-	double weight;
-	double height;
-	String dob;
-	String address;
-	
-	void getData()
-	{
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Enter the age of the person : ");
-		age = sc.nextInt();
-		System.out.println("Enter the weight of the person : ");
-		weight = sc.nextDouble();
-		System.out.println("Enter the height of the person : ");
-		height = sc.nextDouble();
-		String dummy = sc.nextLine();
-		System.out.println("Enter the date of birth of the person : ");
-		dob = sc.nextLine();
-		System.out.println("Enter the address of the person : ");
-		address = sc.nextLine();
-	}
+class Automobile {
+    String make;
+    String type;
+    int maxSpeed;
+    double price;
+    double mileage;
+    String registrationNumber;
 
+    public Automobile(String make, String type, int maxSpeed, double price, double mileage, String registrationNumber) {
+        this.make = make;
+        this.type = type;
+        this.maxSpeed = maxSpeed;
+        this.price = price;
+        this.mileage = mileage;
+        this.registrationNumber = registrationNumber;
+    }
+
+    public void displayInfo() {
+        System.out.println("Make: " + make);
+        System.out.println("Type: " + type);
+        System.out.println("Max Speed: " + maxSpeed + " km/h");
+        System.out.println("Price: Rs." + price);
+        System.out.println("Mileage: " + mileage + " km/l");
+        System.out.println("Registration Number: " + registrationNumber);
+    }
 }
 
-class Employee extends Person
-{
-	int salary;
-	int dateOfJoining;
-	int experience;
-	
-	void getEmployeeData()
-	{
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Enter the salary : ");
-		salary = sc.nextInt();
-		System.out.println("Enter the date of joining : ");
-		dateOfJoining = sc.nextInt();
-		System.out.println("Enter the years of experience :");
-		experience = sc.nextInt();
-	}
+class Truck extends Automobile {
+    int capacity;
+    String hoodType;
+    int noOfWheels;
 
-	void getDetails()
-	{
-		System.out.println("Age of the person is : "+age);
-		System.out.println("Weight of the person is : "+weight);
-		System.out.println("Height of the person is : "+height);
-		System.out.println("Date of Birth of the person is : "+dob);
-		System.out.println("Address of the person is :"+address);
-		System.out.println("Salary of the person is :"+salary);
-		System.out.println("Date of joining of the person is : "+dateOfJoining);
-		System.out.println("The years of experience of the person is :"+experience);
-	}	
+    public Truck(String make, String type, int maxSpeed, double price, double mileage, String registrationNumber, int capacity, String hoodType, int noOfWheels) {
+        super(make, type, maxSpeed, price, mileage, registrationNumber);
+        this.capacity = capacity;
+        this.hoodType = hoodType;
+        this.noOfWheels = noOfWheels;
+    }
+
+    public void displayInfo() {
+        super.displayInfo();
+        System.out.println("Capacity: " + capacity + " tons");
+        System.out.println("Hood Type: " + hoodType);
+        System.out.println("Number of Wheels: " + noOfWheels);
+    }
 }
 
-class Student extends Person
-{
-	int roll;
+class Car extends Automobile {
+    int noOfDoors;
+    int seatingCapacity;
 
-        void getStudentData()
-        {
-                Scanner sc = new Scanner(System.in);
-                System.out.println("Enter the roll number : ");
-                roll = sc.nextInt();
-        }
- 
-        void getDetails()
-        {
-                System.out.println("Age of the person is : "+age);
-                System.out.println("Weight of the person is : "+weight);
-                System.out.println("Height of the person is : "+height);
-                System.out.println("Date of Birth of the person is : "+dob);
-                System.out.println("Address of the person is :"+address);
-                System.out.println("Roll number of the person is :"+roll);
-        }
+    public Car(String make, String type, int maxSpeed, double price, double mileage, String registrationNumber, int noOfDoors, int seatingCapacity) {
+        super(make, type, maxSpeed, price, mileage, registrationNumber);
+        this.noOfDoors = noOfDoors;
+        this.seatingCapacity = seatingCapacity;
+    }
 
-	
+    public void displayInfo() {
+        super.displayInfo();
+        System.out.println("Number of Doors: " + noOfDoors);
+        System.out.println("Seating Capacity: " + seatingCapacity);
+    }
 }
 
-class Technician extends Employee
-{
+public class Main {
+    static void dispInfo(Automobile a)
+    {
+        a.displayInfo();
+    }
+    public static void main(String[] args) {
+        Automobile truck = new Truck("Volvo", "Truck", 120, 5000000, 5, "TRK123", 10, "Covered", 6);
+        Automobile car = new Car("Toyota", "Sedan", 180, 3000000, 15, "CAR456", 4, 5);
 
-}
-
-class Professor extends Employee
-{
-	String course[] = new String[3];
-	String listOfAdvisee[] = new String[3];
-
-	void getProfessorData()
-        {
-	        Scanner sc = new Scanner(System.in);
-                System.out.println("Enter the first course : ");
-                course[0] = sc.next();
-                System.out.println("Enter the second course : ");
-                course[1] = sc.next();
-                System.out.println("Enter the third course :");
-                course[2] = sc.next();
-
-		System.out.println("Enter the first advisee : ");
-                listOfAdvisee[0] = sc.next();
-                System.out.println("Enter the second advisee : ");
-                listOfAdvisee[1] = sc.next();
-                System.out.println("Enter the third avisee :");
-                listOfAdvisee[2] = sc.next();
-
-        }
- 
-        void getDetails()
-        {
-                System.out.println("Age of the person is : "+age);
-                System.out.println("Weight of the person is : "+weight);
-                System.out.println("Height of the person is : "+height);
-                System.out.println("Date of Birth of the person is : "+dob);
-                System.out.println("Address of the person is :"+address);
-                System.out.println("Course one is "+course[0]);
-                System.out.println("Course two is "+course[1]);
-		System.out.println("Course three is "+course[3]);
-		System.out.println("Advisee one is "+listOfAdvisee[0]);
-		System.out.println("Advisee two is "+listOfAdvisee[1]);
-		System.out.println("Advisee three is "+listOfAdvisee[2]);
-        }
-
-}
-
-class Human
-{
-	public static void main(String args[])
-	{
-		Employee ob1 = new Employee();
-		Student ob2 = new Student();
-		Professor ob3 = new Professor();
-
-                ob1.getData();
-		ob1.getEmployeeData();
-		ob2.getData();
-		ob2.getStudentData();
-		ob3.getData();
-		ob3.getProfessorData();
-
-		ob1.getDetails();
-		ob2.getDetails();
-		ob3.getDetails();
-	}
+        System.out.println("Truck Details:");
+        dispInfo(truck);
+        System.out.println();
+        
+        System.out.println("Car Details:");
+        dispInfo(car);
+    }
 }
