@@ -72,7 +72,7 @@ class Date {
     }
 }
 
-public class Main {
+class Main {
     public static void main(String[] args) {
         Date d1 = new Date();
         d1.printDate();
