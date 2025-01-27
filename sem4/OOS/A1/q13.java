@@ -62,7 +62,7 @@ class Car extends Automobile {
     }
 }
 
-public class Main {
+ class Main {
     static void dispInfo(Automobile a)
     {
         a.displayInfo();
