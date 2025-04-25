@@ -2,72 +2,58 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define BUFFER_SIZE 256
+#define MAX_SIZE 1024
 
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
-}
+int main() {
+    int port;
+    char serv_ip[INET_ADDRSTRLEN];
 
-int main(int argc, char *argv[]) {
-    int sockfd, n;
-    struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE];
-   
-    // Check if port number is provided
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-        exit(1);
-    }
+    printf("Enter server IP: ");
+    scanf("%s", serv_ip);
+    printf("Enter port: ");
+    scanf("%d", &port);
+    getchar(); // flush newline
 
-    // Get the port number from command-line argument
-    int PORT = atoi(argv[1]);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) perror("socket"), exit(1);
 
-    // Create socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        error("ERROR opening socket");
-    }
+    struct sockaddr_in serv_addr = {
+        .sin_family = AF_INET,
+        .sin_port = htons(port),
+        .sin_addr.s_addr = inet_addr(serv_ip)
+    };
 
-    // Set up server address structure
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    // Convert IPv4 address from text to binary (localhost)
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        error("Invalid address / Address not supported");
-    }
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        perror("connect"), exit(1);
 
-    // Connect to the server
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        error("Connection failed");
-    }
+    printf("Connected to server!\n");
 
-    // Sending and receiving messages
-    while (1) {
-        printf("Enter message: ");
-        bzero(buffer, BUFFER_SIZE);
-        fgets(buffer, BUFFER_SIZE, stdin);
-       
-        // Send message to the server
-        send(sockfd, buffer, strlen(buffer), 0);
-       
-        // Read response from the server
-        bzero(buffer, BUFFER_SIZE);
-        n = read(sockfd, buffer, BUFFER_SIZE);
-        if (n > 0) {
-            printf("Server: %s", buffer);
-        } else {
-            break;
+    if (fork() == 0) {
+        // Child process: Sending
+        char msg[MAX_SIZE];
+        while (1) {
+            bzero(msg, MAX_SIZE);
+			// printf("Enter message: ");
+            fgets(msg, MAX_SIZE, stdin);
+            write(sockfd, msg, strlen(msg));
+            if (strncmp(msg, "exit", 4) == 0) break;
         }
-
-        // Exit condition
-        if (strncmp("bye", buffer, 3) == 0) {
-            break;
+    } else {
+        // Parent process: Receiving
+        char buf[MAX_SIZE];
+        while (1) {
+            bzero(buf, MAX_SIZE);
+            int n = read(sockfd, buf, MAX_SIZE);
+            if (n <= 0) break;
+            printf("\nServer: %s\n", buf);
+            if (strncmp(buf, "exit", 4) == 0) break;
         }
     }
 
     close(sockfd);
+    printf("Disconnected.\n");
     return 0;
 }
