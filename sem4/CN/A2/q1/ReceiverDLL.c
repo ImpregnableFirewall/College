@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define PORT 12345
 #define BUFFER_SIZE 1024
 
 typedef struct {
@@ -20,7 +19,7 @@ typedef struct {
     struct sockaddr_in address;
 } ReceiverDLL;
 
-void ReceiverDLL_Init(ReceiverDLL *receiver) {
+void ReceiverDLL_Init(ReceiverDLL *receiver, const char *ip, int port) {
     int opt = 1;
     socklen_t addrlen = sizeof(receiver->address);
     
@@ -35,8 +34,12 @@ void ReceiverDLL_Init(ReceiverDLL *receiver) {
     }
     
     receiver->address.sin_family = AF_INET;
-    receiver->address.sin_addr.s_addr = INADDR_ANY;
-    receiver->address.sin_port = htons(PORT);
+    receiver->address.sin_port = htons(port);
+    
+    if (inet_pton(AF_INET, ip, &receiver->address.sin_addr) <= 0) {
+        perror("invalid address");
+        exit(EXIT_FAILURE);
+    }
     
     if (bind(receiver->server_fd, (struct sockaddr*)&receiver->address, sizeof(receiver->address)) < 0) {
         perror("bind failed");
@@ -48,7 +51,7 @@ void ReceiverDLL_Init(ReceiverDLL *receiver) {
         exit(EXIT_FAILURE);
     }
     
-    printf("Receiver listening on port %d...\n", PORT);
+    printf("Receiver listening on %s:%d...\n", ip, port);
     
     if ((receiver->new_socket = accept(receiver->server_fd, (struct sockaddr*)&receiver->address, &addrlen)) < 0) {
         perror("accept");
@@ -104,9 +107,16 @@ void ReceiverDLL_Run(ReceiverDLL *receiver) {
     printf("Connection closed\n");
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <IP> <Port>\n", argv[0]);
+        return 1;
+    }
+    const char *ip = argv[1];
+    int port = atoi(argv[2]);
+
     ReceiverDLL receiver;
-    ReceiverDLL_Init(&receiver);
+    ReceiverDLL_Init(&receiver, ip, port);
     ReceiverDLL_Run(&receiver);
     return 0;
 }
