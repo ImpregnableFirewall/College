@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define PORT 12345
 #define BUFFER_SIZE 1024
 
 typedef struct {
@@ -19,16 +18,16 @@ typedef struct {
     struct sockaddr_in serv_addr;
 } SenderDLL;
 
-void SenderDLL_Init(SenderDLL *sender) {
+void SenderDLL_Init(SenderDLL *sender, const char *ip, int port) {
     if ((sender->sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket creation error");
         exit(EXIT_FAILURE);
     }
     
     sender->serv_addr.sin_family = AF_INET;
-    sender->serv_addr.sin_port = htons(PORT);
+    sender->serv_addr.sin_port = htons(port);
     
-    if (inet_pton(AF_INET, "127.0.0.1", &sender->serv_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, ip, &sender->serv_addr.sin_addr) <= 0) {
         perror("invalid address");
         exit(EXIT_FAILURE);
     }
@@ -102,9 +101,16 @@ void SenderDLL_Run(SenderDLL *sender) {
     close(sender->sock);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <IP> <Port>\n", argv[0]);
+        return 1;
+    }
+    const char *ip = argv[1];
+    int port = atoi(argv[2]);
+
     SenderDLL sender;
-    SenderDLL_Init(&sender);
+    SenderDLL_Init(&sender, ip, port);
     SenderDLL_Run(&sender);
     return 0;
 }
