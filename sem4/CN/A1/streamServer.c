@@ -1,74 +1,67 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
-void error(const char *msg){
-	perror(msg);
-	exit(1);
-}
+#define MAX_SIZE 1024
 
-int main(int argc,char* argv[]){
-	if(argc<2){
-		fprintf(stderr,"Port No. not provided. Program terminated\n");
-		exit(1);
-	}
+int main() {
+    int port;
+	char serv_ip[INET_ADDRSTRLEN];
 
-	int sockfd,newsockfd,portno,n;
-	char buffer[256];
+    printf("Enter server IP: ");
+    scanf("%s", serv_ip);
+    printf("Enter port: ");
+    scanf("%d", &port);
+    getchar(); // consume newline
 
-	struct sockaddr_in serv_addr,cli_addr;
-	socklen_t clilen;
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) perror("socket"), exit(1);
 
-	sockfd =socket(AF_INET ,SOCK_STREAM, 0);
-	if(sockfd<0)
-	{
-		error("Error opening socket..");
-	}
+    struct sockaddr_in serv_addr = {
+        .sin_family = AF_INET,
+        .sin_port = htons(port),
+        .sin_addr.s_addr = inet_addr(serv_ip)
+    };
 
-	bzero((char *) & serv_addr ,sizeof(serv_addr));
-	portno = atoi(argv[1]);
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr= INADDR_ANY;
-	serv_addr.sin_port=htons(portno);
-	
-	if(bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))<0){
-		error("Binding failed");
-	}
+    if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        perror("bind"), exit(1);
 
-	listen(sockfd,5);
-	clilen= sizeof(cli_addr);
+    listen(sockfd, 1);
+    printf("Waiting for connection...\n");
 
-	newsockfd = accept(sockfd , (struct sockaddr*) &cli_addr ,&clilen);
+    int connfd = accept(sockfd, NULL, NULL);
+    if (connfd < 0) perror("accept"), exit(1);
 
-	if(newsockfd<0){
-		error("Error on accept");
-	}
+    printf("Client connected!\n");
 
-	while(1){
-		bzero(buffer,256);
-		n= read(newsockfd, buffer ,255);
-		if(n<0){
-			error("Error on reading..");
-		}
-		printf("Client : %s\n", buffer);
-		bzero(buffer, 256);
-		fgets(buffer,255,stdin);
-		
-		n=write(newsockfd, buffer, strlen(buffer));
-		if(n<0)
-		    error("Error on writing");
-		int i=strncmp("bye", buffer, 3);
-		if(i == 0)	break;
-	}
+    if (fork() == 0) {
+        // child: sending
+        char msg[MAX_SIZE];
+        while (1) {
+            bzero(msg, MAX_SIZE);
+			// printf("Enter message: ");
+            fgets(msg, MAX_SIZE, stdin);
+            write(connfd, msg, strlen(msg));
+            if (strncmp(msg, "exit", 4) == 0) break;
+        }
+    } else {
+        // parent: receiving
+        char buf[MAX_SIZE];
+        while (1) {
+            bzero(buf, MAX_SIZE);
+            int n = read(connfd, buf, MAX_SIZE);
+            if (n <= 0) break;
+            printf("\nClient: %s\n", buf);
+            if (strncmp(buf, "exit", 4) == 0) break;
+        }
+    }
 
-	close(newsockfd);
-	close(sockfd);
-	
-	return 0;
-
-
+    close(connfd);
+    close(sockfd);
+    printf("Connection closed.\n");
+    return 0;
 }
