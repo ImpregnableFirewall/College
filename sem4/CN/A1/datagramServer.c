@@ -1,75 +1,78 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <string.h>
 
-#define BUFFER_SIZE 256
+#define MAX_SIZE 1024
 
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
+void err(const char *exp) {
+	perror(exp);
+	exit(1);
 }
 
-int main(int argc, char* argv[]) {
-    if(argc < 2) {
-        fprintf(stderr, "Port No. not provided. Program terminated\n");
-        exit(1);
-    }
+int main() {
+	char serv_ip[INET_ADDRSTRLEN];
+	unsigned short port;
 
-    int sockfd, n;
-    char buffer[BUFFER_SIZE];
-    struct sockaddr_in serv_addr, cli_addr;
-    socklen_t clilen = sizeof(cli_addr);
+	printf("Enter IP address of server: ");
+	scanf("%s", serv_ip);
 
-    // Create UDP socket (changed to SOCK_DGRAM)
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if(sockfd < 0) {
-        error("Error opening socket");
-    }
+	printf("Enter port number of server: ");
+	scanf("%hu", &port);
+	
+	getchar();
 
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    int portno = atoi(argv[1]);
-    
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    
-    if(bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-        error("Binding failed");
-    }
+	struct sockaddr_in serv_addr = {
+		.sin_family = AF_INET,
+		.sin_addr.s_addr = inet_addr(serv_ip),
+		.sin_port = htons(port)
+	}, cli_addr;
 
-    printf("UDP Server listening on port %d...\n", portno);
+	bzero(&cli_addr, sizeof(cli_addr));
 
-    while(1) {
-        // Receive message from client
-        bzero(buffer, BUFFER_SIZE);
-        n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
-                    (struct sockaddr *) &cli_addr, &clilen);
-        if(n < 0) {
-            error("Error receiving data");
-        }
-        printf("Client: %s", buffer);
+	socklen_t cli_len = sizeof(cli_addr);
 
-        // Prepare response
-        bzero(buffer, BUFFER_SIZE);
-        printf("Server: ");
-        fgets(buffer, BUFFER_SIZE-1, stdin);
-        
-        // Send response to client
-        n = sendto(sockfd, buffer, strlen(buffer), 0,
-                  (struct sockaddr *) &cli_addr, clilen);
-        if(n < 0) {
-            error("Error sending data");
-        }
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-        if(strncmp("bye", buffer, 3) == 0) {
-            break;
-        }
-    }
+	if (sockfd<0) err("Failed to create socket!\n");
 
-    close(sockfd);
-    return 0;
+	int res = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+
+	if (res<0) err("Error binding to port!\n");
+	
+	printf("Waiting for client to initiate conversation...\n");
+
+	char msg[MAX_SIZE];
+	bzero(msg, strlen(msg));
+	recvfrom(sockfd, msg, MAX_SIZE, 0, (struct sockaddr *)&cli_addr, &cli_len);
+
+	printf("Client is from %hu\n", ntohs(cli_addr.sin_port));
+	printf("\nClient: %s\n", msg);
+
+	if (fork()==0) {
+		// child: send
+		while (1) {
+			char buf[MAX_SIZE];
+			bzero(buf, MAX_SIZE);
+			fgets(buf, MAX_SIZE, stdin);
+			sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *)&cli_addr, cli_len);
+		}
+	}
+	else {
+		while (1) {
+			char msg[MAX_SIZE];
+			bzero(msg, MAX_SIZE);
+			recvfrom(sockfd, msg, MAX_SIZE, 0, (struct sockaddr *)&cli_addr, &cli_len);
+			printf("Client: %s\n", msg);
+		}
+	}
+
+	printf("Closing connection...\n");
+	close(sockfd);
+
+	return 0;
 }
