@@ -1,68 +1,65 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
 
-#define BUFFER_SIZE 256
+#define MAX_SIZE 1024
 
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
+void err(const char * exp) {
+	perror(exp);
+	exit(1);
 }
 
-int main(int argc, char *argv[]) {
-    int sockfd, n;
-    struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE];
-    socklen_t addr_len = sizeof(serv_addr);
+int main() {
+	char serv_ip[INET_ADDRSTRLEN];
+	unsigned short port;
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-        exit(1);
-    }
+	printf("Enter IP address of server: ");
+	scanf("%s", serv_ip);
 
-    int PORT = atoi(argv[1]);
+	printf("Enter port number of server: ");
+	scanf("%hu", &port);
+	
+	getchar();
 
-    // Create UDP socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) {
-        error("ERROR opening socket");
-    }
+	struct sockaddr_in serv_addr = {
+		.sin_family = AF_INET,
+		.sin_addr.s_addr = inet_addr(serv_ip),
+		.sin_port = htons(port)
+	}, cli_addr;
 
-    // Configure server address
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        error("Invalid address");
-    }
+	bzero(&cli_addr, sizeof(cli_addr));
 
-    while (1) {
-        printf("Enter message: ");
-        bzero(buffer, BUFFER_SIZE);
-        fgets(buffer, BUFFER_SIZE, stdin);
-        
-        // Send message using sendto()
-        sendto(sockfd, buffer, strlen(buffer), 0,
-              (struct sockaddr *)&serv_addr, addr_len);
-        
-        // Receive response using recvfrom()
-        bzero(buffer, BUFFER_SIZE);
-        n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
-                    (struct sockaddr *)&serv_addr, &addr_len);
-        
-        if (n > 0) {
-            printf("Server: %s", buffer);
-        } else {
-            break;
-        }
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-        if (strncmp("bye", buffer, 3) == 0) {
-            break;
-        }
-    }
+	if (sockfd<0) err("Failed to create socket!\n");
 
-    close(sockfd);
-    return 0;
+	if (fork()==0) {
+		//child: send
+		while (1) {
+			char buf[MAX_SIZE];
+			bzero(buf, MAX_SIZE);
+			fgets(buf, MAX_SIZE, stdin);
+			sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+		}
+	}
+	else {
+		//parent: receive
+		while (1) {
+			char msg[MAX_SIZE];
+			bzero(msg, MAX_SIZE);
+			socklen_t addr_len = sizeof(serv_addr);
+			recvfrom(sockfd, msg, MAX_SIZE, 0, (struct sockaddr *)&serv_addr, &addr_len);
+			printf("Server: %s\n", msg);
+		}
+	}
+	printf("Connection closed...\n");
+
+	close(sockfd);
+
+	return 0;
 }
