@@ -35,7 +35,8 @@ int main(){
     scanf("%d",&x);
 
     long long int ans=0;
-    for(int i=0;i<=deg;i++){
+    int i;
+    for(i=0;i<=deg;i++){
         ans+=pol[i]*pow(x,i);
     }
     printf("The evaluated value is = %d",ans);
